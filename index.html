@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Merma — Panadería</title>
+
+<!-- PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#6c8eff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Merma">
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Nunito:wght@400;600;700;800&display=swap');
+
+[data-theme="dark"] {
+  --bg:       #0d0f1a;
+  --surface:  #161929;
+  --card:     #1e2236;
+  --card2:    #252a42;
+  --border:   #2c3054;
+  --text:     #eef0ff;
+  --muted:    #636890;
+  --accent:   #6c8eff;
+  --green:    #3dffa0;
+  --red:      #ff5370;
+  --yellow:   #ffd166;
+  --chip-bg:  #252a45;
+  --shadow:   rgba(0,0,0,.5);
+  --sel-on:   #6c8eff22;
+}
+[data-theme="light"] {
+  --bg:       #f0f2ff;
+  --surface:  #ffffff;
+  --card:     #ffffff;
+  --card2:    #f5f7ff;
+  --border:   #d2d7f0;
+  --text:     #1a1d38;
+  --muted:    #8a90b8;
+  --accent:   #3d5fef;
+  --green:    #00b872;
+  --red:      #e8304a;
+  --yellow:   #e09000;
+  --chip-bg:  #e8ebff;
+  --shadow:   rgba(60,70,180,.10);
+  --sel-on:   #3d5fef18;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  min-height: 100dvh; padding-bottom: 120px;
+  transition: background .25s, color .25s;
+}
+
+/* ── HEADER ── */
+header {
+  background: var(--surface); border-bottom: 2px solid var(--border);
+  padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 300; box-shadow: 0 2px 16px var(--shadow);
+}
+.brand h1 { font-family: 'Syne'; font-size: 1.5rem; color: var(--accent); }
+.brand small { font-size: 0.65rem; color: var(--muted); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+.hcontrols { display: flex; align-items: center; gap: 10px; }
+.theme-wrap { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.theme-btn {
+  background: var(--chip-bg); border: 1.5px solid var(--border);
+  border-radius: 50px; width: 44px; height: 24px; cursor: pointer; position: relative;
+}
+.theme-btn::after {
+  content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--accent); transition: transform .3s;
+}
+[data-theme="light"] .theme-btn::after { transform: translateX(20px); }
+.theme-lbl { font-size: 0.6rem; color: var(--muted); font-weight: 800; letter-spacing: 1px; }
+.unit-pill { display: flex; background: var(--chip-bg); border: 1.5px solid var(--border); border-radius: 50px; overflow: hidden; }
+.upb { background: none; border: none; color: var(--muted); padding: 5px 10px; font-size: 0.75rem; font-weight: 800; cursor: pointer; font-family: 'Nunito'; }
+.upb.on { background: var(--accent); color: #fff; border-radius: 50px; }
+
+/* ── AVISO DE DATOS GUARDADOS ── */
+.saved-banner {
+  background: var(--card); border: 1.5px solid var(--green); border-radius: 12px;
+  padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; animation: fadeIn .3s ease;
+}
+@keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.saved-banner .sb-text { font-size: 0.82rem; font-weight: 700; color: var(--green); }
+.saved-banner .sb-time { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+.saved-banner .sb-btns { display: flex; gap: 6px; }
+.btn-restore {
+  background: var(--green); color: #111; border: none; border-radius: 8px;
+  padding: 6px 11px; font-weight: 800; font-size: 0.78rem; cursor: pointer; font-family: 'Nunito';
+}
+.btn-restore:active { opacity: .7; }
+.btn-discard {
+  background: none; border: 1.5px solid var(--red); color: var(--red); border-radius: 8px;
+  padding: 6px 11px; font-weight: 800; font-size: 0.78rem; cursor: pointer; font-family: 'Nunito';
+}
+.btn-discard:active { opacity: .7; }
+
+/* ── BARRA TOTAL ── */
+.total-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+  background: var(--surface); border-top: 2px solid var(--border);
+  padding: 10px 14px 12px; display: flex; align-items: center; justify-content: space-between;
+  box-shadow: 0 -4px 20px var(--shadow);
+}
+.total-left { display: flex; flex-direction: column; }
+.total-lbl { font-size: 0.6rem; font-weight: 800; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+.total-num { font-family: 'Syne'; font-size: 2.4rem; color: var(--accent); line-height: 1; transition: transform .15s, color .15s; }
+.total-num.pop { transform: scale(1.07); color: var(--green); }
+.total-unit { font-size: 0.7rem; color: var(--muted); font-weight: 700; }
+.bar-right { display: flex; gap: 8px; align-items: center; }
+.btn-summary {
+  background: var(--chip-bg); border: 1.5px solid var(--border); color: var(--text);
+  border-radius: 10px; padding: 8px 12px; font-weight: 800; font-size: 0.78rem;
+  cursor: pointer; font-family: 'Nunito';
+}
+.btn-summary:active { background: var(--accent); color: #fff; }
+.btn-reset {
+  background: var(--red); color: #fff; border: none; border-radius: 10px;
+  padding: 10px 13px; font-weight: 800; font-size: 0.8rem; cursor: pointer; font-family: 'Nunito';
+}
+.btn-reset:active { opacity: .7; }
+
+/* ── MAIN ── */
+main { max-width: 700px; margin: 0 auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ── SELECTOR ── */
+.selector-box {
+  background: var(--surface); border: 2px dashed var(--border); border-radius: 16px; padding: 13px;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.selector-box .sec-lbl { font-size: 0.68rem; font-weight: 800; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 9px; display: block; }
+.prod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 7px; }
+.prod-btn {
+  background: var(--chip-bg); border: 1.5px solid var(--border); color: var(--text);
+  border-radius: 10px; padding: 9px 10px; font-weight: 800; font-size: 0.85rem;
+  cursor: pointer; font-family: 'Nunito'; text-align: left; display: flex; align-items: center; gap: 6px;
+  transition: background .12s, border-color .12s;
+}
+.prod-btn .pb-ico { font-size: 1.1rem; flex-shrink: 0; }
+.prod-btn:hover { border-color: var(--accent); }
+.prod-btn:active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.prod-btn.added { border-color: var(--green); color: var(--green); }
+.otro-row { display: flex; gap: 7px; margin-top: 8px; }
+.otro-inp {
+  flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 9px 12px; color: var(--text); font-family: 'Nunito'; font-size: 0.92rem;
+  font-weight: 700; outline: none;
+}
+.otro-inp:focus { border-color: var(--accent); }
+.otro-inp::placeholder { color: var(--muted); font-weight: 400; }
+.btn-otro {
+  background: var(--accent); color: #fff; border: none; border-radius: 10px;
+  padding: 0 16px; font-family: 'Syne'; font-size: 1.1rem; cursor: pointer;
+}
+.btn-otro:active { opacity: .75; }
+
+/* ── GRUPOS ── */
+.section-group { display: flex; flex-direction: column; gap: 10px; }
+.group-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0 2px; border-bottom: 2px solid var(--border);
+}
+.group-ico { font-size: 1.3rem; }
+.group-title { font-family: 'Syne'; font-size: 1rem; color: var(--text); flex: 1; }
+.group-sum { font-family: 'Syne'; font-size: 1.3rem; color: var(--yellow); }
+.group-sum-unit { font-size: 0.65rem; color: var(--muted); font-weight: 700; }
+
+/* ── TARJETA SUBTIPO ── */
+.sub-card {
+  background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
+  overflow: hidden; animation: cardIn .2s ease; margin-left: 12px;
+}
+@keyframes cardIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+.sub-head {
+  display: flex; align-items: center; gap: 7px;
+  padding: 9px 12px 7px; border-bottom: 1px solid var(--border);
+}
+.sub-name { font-weight: 800; font-size: 0.95rem; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sub-sum { font-family: 'Syne'; font-size: 1.5rem; color: var(--green); }
+.sub-unit { font-size: 0.65rem; color: var(--muted); font-weight: 700; }
+.sub-cnt { font-size: 0.68rem; color: var(--muted); font-weight: 700; white-space: nowrap; }
+.btn-subdel { background: none; border: none; color: var(--red); font-size: 0.9rem; cursor: pointer; padding: 3px 5px; opacity: .5; }
+.btn-subdel:active { opacity: 1; }
+
+/* CHIPS */
+.chips-wrap { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 12px 6px; min-height: 36px; }
+.chip {
+  background: var(--chip-bg); border: 1.5px solid var(--border); border-radius: 50px;
+  display: flex; align-items: center; gap: 3px; padding: 3px 8px 3px 10px;
+  font-size: 0.85rem; font-weight: 700; animation: chipPop .14s ease;
+}
+@keyframes chipPop { from { transform: scale(.5); opacity:0; } to { transform:scale(1); opacity:1; } }
+.chip .cv { color: var(--accent); }
+.chip .cu { font-size: 0.65rem; color: var(--muted); }
+.chip .cx { background: none; border: none; color: var(--muted); font-size: 0.7rem; cursor: pointer; padding: 0 0 0 3px; }
+.chip .cx:active { color: var(--red); }
+.no-chips { font-size: 0.78rem; color: var(--muted); font-style: italic; }
+
+/* ENTRY */
+.entry-panel { padding: 6px 12px 12px; display: flex; flex-direction: column; gap: 7px; }
+.weight-display {
+  background: var(--bg); border: 2px solid var(--border); border-radius: 11px;
+  padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; min-height: 50px;
+}
+.wd-val { font-family: 'Syne'; font-size: 1.8rem; color: var(--muted); line-height: 1; min-width: 70px; transition: color .15s; }
+.wd-val.active { color: var(--accent); }
+.wd-unit-lbl { font-size: 0.72rem; color: var(--muted); font-weight: 700; align-self: flex-end; padding-bottom: 3px; }
+.wd-hint { font-size: 0.68rem; color: var(--muted); font-style: italic; }
+.btn-confirm {
+  background: var(--green); color: #111; border: none; border-radius: 9px;
+  padding: 9px 15px; font-family: 'Syne'; font-size: 1.1rem; cursor: pointer; white-space: nowrap; font-weight: 700;
+}
+.btn-confirm:active { opacity: .7; }
+.quick-lbl { font-size: 0.62rem; font-weight: 800; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.quick-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+.qb {
+  background: var(--card2); border: 1.5px solid var(--border); color: var(--text);
+  border-radius: 9px; padding: 7px 11px; font-size: 0.82rem; font-weight: 800; cursor: pointer;
+  font-family: 'Nunito'; white-space: nowrap;
+}
+.qb:active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.numpad-lbl { font-size: 0.62rem; font-weight: 800; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+.numpad { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.nk {
+  background: var(--card2); border: 1.5px solid var(--border); color: var(--text);
+  border-radius: 10px; height: 46px; font-size: 1rem; font-weight: 800; cursor: pointer;
+  font-family: 'Nunito'; display: flex; align-items: center; justify-content: center;
+  transition: background .1s; user-select: none;
+}
+.nk:active { transform: scale(.92); background: var(--accent); color: #fff; border-color: var(--accent); }
+.nk.dot { font-size: 1.3rem; color: var(--yellow); }
+.nk.del { color: var(--red); }
+.nk.del:active { background: var(--red); color: #fff; }
+.nk.ok { background: var(--green); color: #111; border-color: var(--green); font-size: 0.95rem; }
+.nk.ok:active { opacity: .75; }
+
+/* SUB TIPOS */
+.add-sub-row { display: flex; gap: 7px; padding: 0 12px 12px; }
+.sub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 5px; padding: 0 12px 10px; }
+.sb {
+  background: var(--chip-bg); border: 1.5px solid var(--border); color: var(--muted);
+  border-radius: 9px; padding: 7px 9px; font-size: 0.8rem; font-weight: 800; cursor: pointer;
+  font-family: 'Nunito'; text-align: center; transition: background .12s;
+}
+.sb:active, .sb.picked { background: var(--accent); color: #fff; border-color: var(--accent); }
+.sub-custom-inp {
+  flex: 1; background: var(--bg); border: 1.5px solid var(--border); border-radius: 9px;
+  padding: 8px 11px; color: var(--text); font-family: 'Nunito'; font-size: 0.88rem; font-weight: 700; outline: none;
+}
+.sub-custom-inp:focus { border-color: var(--accent); }
+.sub-custom-inp::placeholder { color: var(--muted); font-weight: 400; }
+.btn-sub-add {
+  background: var(--accent); color: #fff; border: none; border-radius: 9px;
+  padding: 0 13px; font-family: 'Syne'; font-size: 1rem; cursor: pointer;
+}
+.btn-sub-add:active { opacity: .75; }
+.sub-divider { font-size: 0.62rem; color: var(--muted); font-weight: 800; letter-spacing: 1px; text-transform: uppercase; padding: 0 12px 5px; }
+
+/* ── MODAL RESUMEN ── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 500;
+  display: none; align-items: flex-end; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.overlay.show { display: flex; }
+.modal {
+  background: var(--surface); border-top: 2px solid var(--border);
+  border-radius: 20px 20px 0 0; padding: 18px 16px 32px; width: 100%; max-width: 700px;
+  max-height: 80dvh; overflow-y: auto; animation: slideUp .25s ease;
+}
+@keyframes slideUp { from { transform: translateY(60px); opacity:0; } to { transform:none; opacity:1; } }
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.modal-head h2 { font-family: 'Syne'; font-size: 1.3rem; color: var(--accent); }
+.btn-close-modal { background: none; border: none; color: var(--muted); font-size: 1.3rem; cursor: pointer; }
+.sum-group { margin-bottom: 14px; }
+.sum-group-title {
+  font-family: 'Syne'; font-size: 0.9rem; color: var(--yellow);
+  border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 7px;
+  display: flex; justify-content: space-between;
+}
+.sum-row { display: flex; justify-content: space-between; padding: 4px 6px; font-size: 0.88rem; border-bottom: 1px solid var(--border); }
+.sum-row:last-child { border-bottom: none; }
+.sum-row span:last-child { font-family: 'Syne'; font-size: 0.95rem; color: var(--accent); }
+.sum-grand { display: flex; justify-content: space-between; padding: 10px 6px 0; margin-top: 8px; border-top: 2px solid var(--border); }
+.sum-grand span { font-family: 'Syne'; font-size: 1.2rem; }
+.sum-grand span:last-child { color: var(--green); }
+.sum-saved-info { font-size: 0.72rem; color: var(--muted); text-align: center; margin-top: 10px; }
+.btn-borrar-resumen {
+  display: block; width: 100%; margin-top: 14px;
+  background: var(--red); color: #fff; border: none; border-radius: 10px;
+  padding: 12px; font-weight: 800; font-size: 0.88rem; cursor: pointer; font-family: 'Nunito';
+}
+.btn-borrar-resumen:active { opacity: .7; }
+
+/* ── EMPTY ── */
+.empty-state { text-align: center; color: var(--muted); padding: 36px 16px; line-height: 1.8; }
+.empty-state .ico { font-size: 2.8rem; display: block; margin-bottom: 8px; }
+
+@media (max-width: 400px) {
+  .prod-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .total-num { font-size: 2rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>🥖 Merma</h1>
+    <small>Registro de peso</small>
+  </div>
+  <div class="hcontrols">
+    <div class="theme-wrap">
+      <button class="theme-btn" onclick="toggleTheme()"></button>
+      <span class="theme-lbl" id="theme-lbl">OSCURO</span>
+    </div>
+    <div class="unit-pill">
+      <button class="upb on" id="u-kg"  onclick="setUnit('kg')">kg</button>
+      <button class="upb"    id="u-lb"  onclick="setUnit('lb')">lb</button>
+      <button class="upb"    id="u-ton" onclick="setUnit('ton')">ton</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Banner datos guardados (se muestra si hay datos previos) -->
+  <div id="saved-banner" style="display:none" class="saved-banner">
+    <div>
+      <div class="sb-text">📂 Hay datos guardados</div>
+      <div class="sb-time" id="saved-time"></div>
+    </div>
+    <div class="sb-btns">
+      <button class="btn-restore" onclick="restoreData()">↩ Restaurar</button>
+      <button class="btn-discard" onclick="discardSaved()">🗑 Descartar</button>
+    </div>
+  </div>
+
+  <!-- Selector de producto -->
+  <div class="selector-box">
+    <span class="sec-lbl">Selecciona un producto para agregar</span>
+    <div class="prod-grid" id="prod-grid"></div>
+    <div class="otro-row">
+      <input type="text" class="otro-inp" id="otro-inp" placeholder="Otro producto (escribe)..." maxlength="28" autocomplete="off">
+      <button class="btn-otro" onclick="addOtro()">+ Add</button>
+    </div>
+  </div>
+
+  <!-- Grupos -->
+  <div id="groups">
+    <div class="empty-state" id="empty-msg">
+      <span class="ico">🍞</span>
+      Selecciona un producto arriba<br>para empezar a registrar merma
+    </div>
+  </div>
+</main>
+
+<!-- Barra total -->
+<div class="total-bar">
+  <div class="total-left">
+    <span class="total-lbl">Total merma</span>
+    <span class="total-num" id="bar-total">0</span>
+    <span class="total-unit" id="bar-unit">kg en total</span>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:4px;min-width:88px">
+    <div id="bar-pansalado" style="display:none;background:var(--chip-bg);border:1.5px solid var(--border);border-radius:8px;padding:4px 8px;font-size:0.72rem;font-weight:800;color:var(--yellow)">
+      🧆 <span id="bar-ps-val">0</span> <span id="bar-ps-u">kg</span>
+      <button onclick="togglePanSaladoInTotal()" id="btn-ps-toggle"
+        style="background:none;border:1px solid var(--muted);border-radius:4px;color:var(--muted);font-size:0.58rem;cursor:pointer;padding:1px 4px;margin-left:2px;font-family:Nunito;font-weight:800">+sum</button>
+      <br><span style="font-size:0.6rem;color:var(--muted);font-weight:600">Pan Salado</span>
+    </div>
+    <div id="bar-carton" style="display:none;background:var(--chip-bg);border:1.5px solid var(--border);border-radius:8px;padding:4px 8px;font-size:0.72rem;font-weight:800;color:var(--muted)">
+      📦 <span id="bar-ct-val">0</span> <span id="bar-ct-u">kg</span>
+      <br><span style="font-size:0.6rem;font-weight:600">Cartón (aparte)</span>
+    </div>
+  </div>
+  <div class="bar-right">
+    <button class="btn-summary" onclick="openSummary()">📋 Resumen</button>
+    <button class="btn-reset" onclick="resetAll()">🗑 Limpiar</button>
+  </div>
+</div>
+
+<!-- Modal resumen -->
+<div class="overlay" id="overlay" onclick="closeOverlay(event)">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <h2>📋 Resumen de merma</h2>
+      <button class="btn-close-modal" onclick="closeSummary()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════
+   SERVICE WORKER (PWA)
+════════════════════════════ */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+/* ════════════════════════════
+   CATÁLOGO
+════════════════════════════ */
+const CATALOG = [
+  { key:'bizcocho',     label:'Bizcocho',       ico:'🥐', subs:['Chocolate','Vainilla'] },
+  { key:'plancha',      label:'Plancha',         ico:'🍫', subs:['Chocolate','Vainilla'] },
+  { key:'rosca',        label:'Rosca',           ico:'🍩', subs:['Chocolate'] },
+  { key:'pan_caja',     label:'Pan de Caja',     ico:'🍞', subs:['Integral','Centeno','Multisemilla'] },
+  { key:'galleta',      label:'Galleta',         ico:'🍪', subs:['Galleta','Morona'] },
+  { key:'chocolate',    label:'Chocolate',       ico:'🍫', subs:['Blanco'] },
+  { key:'fondant',      label:'Fondant',         ico:'🎂', subs:['Recorte'] },
+  { key:'gourmet',      label:'Gourmet',         ico:'⭐', subs:[''] },
+  { key:'laminados',    label:'Laminados',       ico:'📄', subs:[''] },
+  { key:'orejitas',     label:'Orejitas',        ico:'👂', subs:[''] },
+  { key:'campechanas',  label:'Campechanas',     ico:'🥧', subs:[''] },
+  { key:'harina',       label:'Harina',          ico:'🌾', subs:[''] },
+  { key:'pan_salado',   label:'Pan Salado',      ico:'🧆', subs:[''] },
+  { key:'carton',       label:'Cartón (aparte)', ico:'📦', subs:['Liso','Corrugado','Otro'] },
+];
+
+const QUICK = { kg:[5,10,15,20,25,30,40,50,100], lb:[10,25,50,100,150], ton:[0.005,0.01,0.025,0.05,0.5] };
+const SAVE_KEY   = 'merma-data-v1';
+const THEME_KEY  = 'merma-theme';
+const TTL_MS     = 48 * 60 * 60 * 1000; // 48 horas
+
+let unit = 'kg';
+let groups = {};
+let incluirPanSalado = false;
+
+/* ════════════════════════════
+   INIT
+════════════════════════════ */
+(function init() {
+  // Aplicar tema guardado antes de pintar
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  if (savedTheme) {
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    document.getElementById('theme-lbl').textContent = savedTheme === 'light' ? 'CLARO' : 'OSCURO';
+  }
+
+  // Construir grid de productos
+  const grid = document.getElementById('prod-grid');
+  CATALOG.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'prod-btn'; btn.id = 'pbtn-'+p.key;
+    btn.innerHTML = `<span class="pb-ico">${p.ico}</span>${p.label}`;
+    btn.onclick = () => activateGroup(p.key);
+    grid.appendChild(btn);
+  });
+  document.getElementById('otro-inp').addEventListener('keydown', e => { if(e.key==='Enter') addOtro(); });
+
+  // Verificar si hay datos guardados dentro de 48h
+  checkSavedData();
+})();
+
+/* ════════════════════════════
+   GUARDADO / RESTAURACIÓN 48H
+════════════════════════════ */
+function saveData() {
+  // Guardamos solo los datos serializables (sin buf de teclado)
+  const toSave = {
+    ts: Date.now(),
+    unit,
+    incluirPanSalado,
+    groups: Object.fromEntries(
+      Object.entries(groups).map(([gkey, g]) => [gkey, {
+        key: g.key, label: g.label, ico: g.ico, catalogSubs: g.catalogSubs,
+        subCards: Object.fromEntries(
+          Object.entries(g.subCards).map(([sid, sc]) => [sid, {
+            id: sc.id, name: sc.name, sacks: sc.sacks, buf: ''
+          }])
+        )
+      }])
+    )
+  };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(toSave)); } catch(e) {}
+}
+
+function checkSavedData() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    const age = Date.now() - data.ts;
+    if (age > TTL_MS) { localStorage.removeItem(SAVE_KEY); return; } // expirado
+    if (!data.groups || Object.keys(data.groups).length === 0) return;
+
+    // Mostrar banner con tiempo restante
+    const horasRestantes = Math.floor((TTL_MS - age) / 3600000);
+    const minRestantes   = Math.floor(((TTL_MS - age) % 3600000) / 60000);
+    const guardadoHace   = formatAge(age);
+    document.getElementById('saved-time').textContent =
+      `Guardado hace ${guardadoHace} · Expira en ${horasRestantes}h ${minRestantes}m`;
+    document.getElementById('saved-banner').style.display = 'flex';
+
+    // Guardar referencia para restaurar
+    window._pendingSave = data;
+  } catch(e) {}
+}
+
+function restoreData() {
+  const data = window._pendingSave; if (!data) return;
+  document.getElementById('saved-banner').style.display = 'none';
+
+  // Restaurar unidad
+  unit = data.unit || 'kg';
+  ['kg','lb','ton'].forEach(x => document.getElementById('u-'+x).classList.toggle('on', x===unit));
+  document.getElementById('bar-unit').textContent = unit+' en total';
+
+  incluirPanSalado = data.incluirPanSalado || false;
+  groups = data.groups || {};
+
+  // Vaciar grupos visibles y reconstruir
+  const container = document.getElementById('groups');
+  container.innerHTML = '';
+  document.getElementById('empty-msg') && (document.getElementById('empty-msg').style.display = 'none');
+
+  Object.values(groups).forEach(g => {
+    renderGroup(g.key, true /* restored */);
+    document.getElementById('pbtn-'+g.key)?.classList.add('added');
+    // Refrescar sub-tarjetas
+    Object.keys(g.subCards).forEach(sid => {
+      renderSubCard(g.key, sid);
+      refreshSubCard(g.key, sid);
+    });
+    refreshGroupSum(g.key);
+  });
+
+  if (!Object.keys(groups).length) {
+    container.innerHTML = `<div class="empty-state" id="empty-msg"><span class="ico">🍞</span>Selecciona un producto arriba<br>para empezar a registrar merma</div>`;
+  }
+
+  refreshTotal();
+}
+
+function discardSaved() {
+  localStorage.removeItem(SAVE_KEY);
+  document.getElementById('saved-banner').style.display = 'none';
+  window._pendingSave = null;
+}
+
+function formatAge(ms) {
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m} minutos`;
+}
+
+/* ════════════════════════════
+   GRUPOS
+════════════════════════════ */
+function activateGroup(key) {
+  const cat = CATALOG.find(c=>c.key===key);
+  if (groups[key]) {
+    document.getElementById('grp-'+key)?.scrollIntoView({ behavior:'smooth', block:'start' });
+    return;
+  }
+  groups[key] = { key, label:cat.label, ico:cat.ico, catalogSubs:cat.subs, subCards:{} };
+  renderGroup(key);
+  document.getElementById('pbtn-'+key)?.classList.add('added');
+  document.getElementById('empty-msg') && (document.getElementById('empty-msg').style.display='none');
+  setTimeout(() => document.getElementById('grp-'+key)?.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
+  saveData();
+}
+
+function addOtro() {
+  const inp = document.getElementById('otro-inp');
+  const name = inp.value.trim(); if(!name) { inp.focus(); return; }
+  const key = 'otro_'+Date.now();
+  groups[key] = { key, label:name, ico:'📦', catalogSubs:['Otro'], subCards:{} };
+  renderGroup(key);
+  inp.value = '';
+  document.getElementById('empty-msg') && (document.getElementById('empty-msg').style.display='none');
+  setTimeout(() => document.getElementById('grp-'+key)?.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
+  saveData();
+}
+
+function renderGroup(key, skipAppend) {
+  const g = groups[key];
+  const container = document.getElementById('groups');
+  const div = document.createElement('div');
+  div.className = 'section-group'; div.id = 'grp-'+key;
+  div.innerHTML = `
+    <div class="group-header">
+      <span class="group-ico">${g.ico}</span>
+      <span class="group-title">${esc(g.label)}</span>
+      <span class="group-sum" id="gsum-${key}">0</span>
+      <span class="group-sum-unit" id="gsumu-${key}">${unit}</span>
+      <button class="btn-subdel" style="opacity:.4;font-size:.8rem" onclick="delGroup('${key}')">✕ quitar</button>
+    </div>
+    <div id="subcards-${key}"></div>
+    <div class="sub-divider">Agregar tipo de merma</div>
+    <div class="sub-grid" id="subgrid-${key}">
+      ${g.catalogSubs.map(s=>`<button class="sb" onclick="addSubCard('${key}','${esc(s)}')">${s}</button>`).join('')}
+    </div>
+    <div class="add-sub-row">
+      <input type="text" class="sub-custom-inp" id="scustom-${key}" placeholder="Tipo personalizado..." maxlength="28" autocomplete="off">
+      <button class="btn-sub-add" onclick="addSubCustom('${key}')">+ Add</button>
+    </div>
+  `;
+  if (!skipAppend) container.appendChild(div);
+  else container.appendChild(div);
+  div.querySelector('.sub-custom-inp').addEventListener('keydown', e => { if(e.key==='Enter') addSubCustom(key); });
+}
+
+function delGroup(key) {
+  if(!confirm('¿Quitar este producto y todos sus tipos?')) return;
+  delete groups[key];
+  document.getElementById('grp-'+key)?.remove();
+  document.getElementById('pbtn-'+key)?.classList.remove('added');
+  if(!Object.keys(groups).length) {
+    const c = document.getElementById('groups');
+    if (!document.getElementById('empty-msg')) {
+      c.innerHTML = `<div class="empty-state" id="empty-msg"><span class="ico">🍞</span>Selecciona un producto arriba<br>para empezar a registrar merma</div>`;
+    } else document.getElementById('empty-msg').style.display = '';
+  }
+  refreshTotal(); saveData();
+}
+
+/* ════════════════════════════
+   SUB-TARJETAS
+════════════════════════════ */
+function addSubCard(gkey, name) {
+  const g = groups[gkey]; if(!g) return;
+  const sid = gkey+'_'+name.toLowerCase().replace(/\s+/g,'_')+'_'+Date.now();
+  g.subCards[sid] = { id:sid, name, sacks:[], buf:'' };
+  renderSubCard(gkey, sid);
+  setTimeout(() => document.getElementById('sc-'+sid)?.scrollIntoView({ behavior:'smooth', block:'nearest' }), 80);
+  saveData();
+}
+
+function addSubCustom(gkey) {
+  const inp = document.getElementById('scustom-'+gkey);
+  const name = inp.value.trim(); if(!name) { inp.focus(); return; }
+  addSubCard(gkey, name);
+  inp.value = '';
+}
+
+function renderSubCard(gkey, sid) {
+  const sc = groups[gkey].subCards[sid];
+  const container = document.getElementById('subcards-'+gkey);
+  const div = document.createElement('div');
+  div.className = 'sub-card'; div.id = 'sc-'+sid;
+  div.innerHTML = subCardHTML(gkey, sid, sc);
+  container.appendChild(div);
+}
+
+function subCardHTML(gkey, sid, sc) {
+  const qw = QUICK[unit];
+  return `
+  <div class="sub-head">
+    <span class="sub-name">${esc(sc.name)}</span>
+    <span class="sub-sum" id="ss-${sid}">0</span>
+    <span class="sub-unit" id="ssu-${sid}">${unit}</span>
+    <span class="sub-cnt" id="sc2-${sid}">0 reg.</span>
+    <button class="btn-subdel" onclick="delSubCard('${gkey}','${sid}')">✕</button>
+  </div>
+  <div class="chips-wrap" id="chips-${sid}">
+    <span class="no-chips">Sin registros aún</span>
+  </div>
+  <div class="entry-panel">
+    <div class="weight-display">
+      <div>
+        <div class="wd-val" id="wd-${sid}">–</div>
+        <div class="wd-hint">Teclado o botones rápidos</div>
+      </div>
+      <span class="wd-unit-lbl" id="wdu-${sid}">${unit}</span>
+      <button class="btn-confirm" onclick="confirmWeight('${gkey}','${sid}')">✓ OK</button>
+    </div>
+    <span class="quick-lbl">Pesos rápidos</span>
+    <div class="quick-grid" id="qg-${sid}">
+      ${qw.map(w=>`<button class="qb" onclick="quickAdd('${gkey}','${sid}',${w})">${w}</button>`).join('')}
+    </div>
+    <span class="numpad-lbl" style="margin-top:4px">Teclado numérico</span>
+    <div class="numpad">
+      ${[7,8,9,'.',4,5,6,'0',1,2,3,'⌫'].map(k=>`
+        <button class="nk ${k==='.'?'dot':''} ${k==='⌫'?'del':''}" onclick="kbPress('${gkey}','${sid}','${k}')">${k}</button>
+      `).join('')}
+      <button class="nk ok" style="grid-column:1/3" onclick="confirmWeight('${gkey}','${sid}')">✓ Agregar</button>
+      <button class="nk del" style="grid-column:3/5" onclick="kbPress('${gkey}','${sid}','C')">Borrar</button>
+    </div>
+  </div>`;
+}
+
+function delSubCard(gkey, sid) {
+  if(!confirm('¿Quitar este tipo?')) return;
+  delete groups[gkey].subCards[sid];
+  document.getElementById('sc-'+sid)?.remove();
+  refreshGroupSum(gkey); refreshTotal(); saveData();
+}
+
+/* ════════════════════════════
+   TECLADO
+════════════════════════════ */
+function kbPress(gkey, sid, key) {
+  const sc = groups[gkey]?.subCards[sid]; if(!sc) return;
+  if (key==='⌫') { sc.buf = sc.buf.slice(0,-1); }
+  else if (key==='C') { sc.buf = ''; }
+  else if (key==='.') { if(!sc.buf.includes('.')) sc.buf+='.'; }
+  else if (key==='00') { if(sc.buf && sc.buf!=='0') sc.buf+='00'; }
+  else {
+    if (sc.buf==='0' && key!=='.') sc.buf = key;
+    else if (sc.buf.length < 10) sc.buf += key;
+  }
+  const elD = document.getElementById('wd-'+sid);
+  if (elD) { elD.textContent = sc.buf||'–'; elD.classList.toggle('active', sc.buf.length>0); }
+}
+
+/* ════════════════════════════
+   PESOS
+════════════════════════════ */
+function confirmWeight(gkey, sid) {
+  const sc = groups[gkey]?.subCards[sid]; if(!sc) return;
+  const val = parseFloat(sc.buf);
+  if (isNaN(val)||val<=0) return;
+  sc.sacks.push(Math.round(val*100000)/100000);
+  sc.buf = '';
+  const elD = document.getElementById('wd-'+sid);
+  if(elD) { elD.textContent='–'; elD.classList.remove('active'); }
+  refreshSubCard(gkey, sid); refreshGroupSum(gkey); refreshTotal(); saveData();
+}
+
+function quickAdd(gkey, sid, w) {
+  const sc = groups[gkey]?.subCards[sid]; if(!sc) return;
+  sc.sacks.push(w);
+  refreshSubCard(gkey, sid); refreshGroupSum(gkey); refreshTotal(); saveData();
+}
+
+function removeSack(gkey, sid, idx) {
+  const sc = groups[gkey]?.subCards[sid]; if(!sc) return;
+  sc.sacks.splice(idx,1);
+  refreshSubCard(gkey, sid); refreshGroupSum(gkey); refreshTotal(); saveData();
+}
+
+/* ════════════════════════════
+   REFRESH
+════════════════════════════ */
+function refreshSubCard(gkey, sid) {
+  const sc = groups[gkey]?.subCards[sid]; if(!sc) return;
+  const sum = sc.sacks.reduce((a,b)=>a+b,0);
+  el('ss-'+sid, fmt(sum));
+  el('sc2-'+sid, sc.sacks.length+' reg.');
+  const chips = document.getElementById('chips-'+sid);
+  if(chips) chips.innerHTML = sc.sacks.length
+    ? sc.sacks.map((s,i)=>`
+        <div class="chip">
+          <span class="cv">${fmt(s)}</span>
+          <span class="cu">${unit}</span>
+          <button class="cx" onclick="removeSack('${gkey}','${sid}',${i})">✕</button>
+        </div>`).join('')
+    : '<span class="no-chips">Sin registros aún</span>';
+  const qg = document.getElementById('qg-'+sid);
+  if(qg) qg.innerHTML = QUICK[unit].map(w=>`<button class="qb" onclick="quickAdd('${gkey}','${sid}',${w})">${w}</button>`).join('');
+  el('ssu-'+sid, unit); el('wdu-'+sid, unit);
+}
+
+function refreshGroupSum(gkey) {
+  const g = groups[gkey]; if(!g) return;
+  const sum = Object.values(g.subCards).reduce((a,sc)=>a+sc.sacks.reduce((x,y)=>x+y,0),0);
+  el('gsum-'+gkey, fmt(sum)); el('gsumu-'+gkey, unit);
+}
+
+function refreshTotal() {
+  let totalGeneral = 0, totalPanSalado = 0, totalCarton = 0;
+  Object.values(groups).forEach(g => {
+    const s = Object.values(g.subCards).reduce((b,sc)=>b+sc.sacks.reduce((x,y)=>x+y,0),0);
+    if (g.key==='pan_salado') totalPanSalado = s;
+    else if (g.key==='carton') totalCarton = s;
+    else totalGeneral += s;
+  });
+  if (incluirPanSalado) totalGeneral += totalPanSalado;
+
+  const psBar = document.getElementById('bar-pansalado');
+  if (psBar) {
+    psBar.style.display = totalPanSalado > 0 ? 'block' : 'none';
+    el('bar-ps-val', fmt(totalPanSalado)); el('bar-ps-u', unit);
+    const btnT = document.getElementById('btn-ps-toggle');
+    if (btnT) {
+      btnT.textContent = incluirPanSalado ? '-quit' : '+sum';
+      btnT.style.background = incluirPanSalado ? 'var(--green)' : 'none';
+      btnT.style.color = incluirPanSalado ? '#111' : 'var(--muted)';
+    }
+  }
+  const ctBar = document.getElementById('bar-carton');
+  if (ctBar) {
+    ctBar.style.display = totalCarton > 0 ? 'block' : 'none';
+    el('bar-ct-val', fmt(totalCarton)); el('bar-ct-u', unit);
+  }
+  const barEl = document.getElementById('bar-total');
+  barEl.textContent = fmt(totalGeneral);
+  barEl.classList.remove('pop'); void barEl.offsetWidth; barEl.classList.add('pop');
+  setTimeout(()=>barEl.classList.remove('pop'),320);
+  document.getElementById('bar-unit').textContent = unit+' en total';
+}
+
+function togglePanSaladoInTotal() {
+  incluirPanSalado = !incluirPanSalado;
+  refreshTotal(); saveData();
+}
+
+/* ════════════════════════════
+   RESUMEN
+════════════════════════════ */
+function openSummary() {
+  const body = document.getElementById('modal-body');
+  let html = '', grand = 0;
+  Object.values(groups).forEach(g => {
+    const gsum = Object.values(g.subCards).reduce((a,sc)=>a+sc.sacks.reduce((x,y)=>x+y,0),0);
+    if(Object.keys(g.subCards).length===0) return;
+    html += `<div class="sum-group">
+      <div class="sum-group-title"><span>${g.ico} ${esc(g.label)}</span><span>${fmt(gsum)} ${unit}</span></div>`;
+    Object.values(g.subCards).forEach(sc => {
+      const s = sc.sacks.reduce((a,b)=>a+b,0);
+      html += `<div class="sum-row"><span>${esc(sc.name)} (${sc.sacks.length} reg.)</span><span>${fmt(s)} ${unit}</span></div>`;
+    });
+    html += '</div>';
+    if (g.key!=='carton' && (g.key!=='pan_salado' || incluirPanSalado)) grand += gsum;
+  });
+  if (!html) html = '<p style="color:var(--muted);text-align:center;padding:20px">Sin registros aún</p>';
+
+  // Info de guardado
+  const raw = localStorage.getItem(SAVE_KEY);
+  let savedInfo = '';
+  if (raw) {
+    try {
+      const d = JSON.parse(raw);
+      const age = Date.now() - d.ts;
+      const hRest = Math.floor((TTL_MS - age) / 3600000);
+      const mRest = Math.floor(((TTL_MS - age) % 3600000) / 60000);
+      savedInfo = `<div class="sum-saved-info">💾 Datos guardados automáticamente · Expiran en ${hRest}h ${mRest}m</div>`;
+    } catch(e) {}
+  }
+
+  html += `<div class="sum-grand"><span>TOTAL GENERAL</span><span>${fmt(grand)} ${unit}</span></div>`;
+  html += savedInfo;
+  html += `<button class="btn-borrar-resumen" onclick="borrarDesdeResumen()">🗑 Borrar todos los datos</button>`;
+  body.innerHTML = html;
+  document.getElementById('overlay').classList.add('show');
+}
+
+function borrarDesdeResumen() {
+  if (!confirm('¿Borrar todos los datos y empezar de cero?')) return;
+  closeSummary();
+  resetAll(true);
+}
+
+function closeSummary() { document.getElementById('overlay').classList.remove('show'); }
+function closeOverlay(e) { if(e.target===document.getElementById('overlay')) closeSummary(); }
+
+/* ════════════════════════════
+   TEMA / UNIDAD
+════════════════════════════ */
+function toggleTheme() {
+  const t = document.documentElement.getAttribute('data-theme')==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('theme-lbl').textContent = t==='dark'?'OSCURO':'CLARO';
+  localStorage.setItem(THEME_KEY, t);
+}
+
+function setUnit(u) {
+  unit = u;
+  ['kg','lb','ton'].forEach(x => document.getElementById('u-'+x).classList.toggle('on', x===u));
+  document.getElementById('bar-unit').textContent = u+' en total';
+  Object.values(groups).forEach(g => Object.keys(g.subCards).forEach(sid => refreshSubCard(g.key, sid)));
+  Object.keys(groups).forEach(gkey => refreshGroupSum(gkey));
+  refreshTotal(); saveData();
+}
+
+/* ════════════════════════════
+   RESET
+════════════════════════════ */
+function resetAll(skipConfirm) {
+  if(!skipConfirm && !Object.keys(groups).length) return;
+  if(!skipConfirm && !confirm('¿Borrar todo y empezar de cero?')) return;
+  groups = {}; incluirPanSalado = false;
+  document.getElementById('groups').innerHTML =
+    `<div class="empty-state" id="empty-msg"><span class="ico">🍞</span>Selecciona un producto arriba<br>para empezar a registrar merma</div>`;
+  document.querySelectorAll('.prod-btn').forEach(b=>b.classList.remove('added'));
+  localStorage.removeItem(SAVE_KEY);
+  refreshTotal();
+}
+
+/* ════════════════════════════
+   UTILS
+════════════════════════════ */
+function el(id, val) { const e=document.getElementById(id); if(e) e.textContent=val; }
+function fmt(n) { const r=Math.round(n*100000)/100000; return r%1===0?r.toString():r.toFixed(5).replace(/\.?0+$/,''); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+</body>
+</html>
